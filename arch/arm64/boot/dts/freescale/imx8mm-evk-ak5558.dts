@@ -4,7 +4,7 @@
  */
 
 
-#include "imx8mm-evk.dts"
+#include "imx8mm-evkb.dts"
 
 / {
 	sound-ak5558 {

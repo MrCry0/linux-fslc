@@ -3,7 +3,7 @@
  * Copyright 2021 NXP
  */
 
-#include "imx8mm-evk.dts"
+#include "imx8mm-evkb.dts"
 
 &ethphy0 {
 	/delete-property/ reset-assert-us;

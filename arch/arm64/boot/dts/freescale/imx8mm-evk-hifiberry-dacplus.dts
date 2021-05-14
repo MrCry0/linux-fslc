@@ -3,7 +3,7 @@
  * Copyright 2020 NXP.
  */
 
-#include "imx8mm-evk.dts"
+#include "imx8mm-evkb.dts"
 
 / {
 	ext_osc_22m: ext-osc-22m {
