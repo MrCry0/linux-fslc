@@ -7,6 +7,7 @@
 //
 // Author: Liam Girdwood <lrg@slimlogic.co.uk>
 
+#define DEBUG
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/debugfs.h>
@@ -2062,6 +2063,7 @@ struct regulator *_regulator_get(struct device *dev, const char *id,
 			return ERR_PTR(-ENODEV);
 		}
 
+		dev_dbg(dev, "%s(%s): switch(%d)\n", __func__, id, get_type);
 		switch (get_type) {
 		case NORMAL_GET:
 			/*
