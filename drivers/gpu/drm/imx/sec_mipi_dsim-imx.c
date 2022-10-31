@@ -308,10 +308,12 @@ static int sec_dsim_of_parse_resets(struct imx_sec_dsim_device *dsim)
 	parent = args.np;
 	for_each_child_of_node(parent, child) {
 		compat = of_get_property(child, "compatible", NULL);
+		dev_info(dev, "## Node=%s\n", compat);
 		if (!compat)
 			continue;
 
 		rstc = of_reset_control_array_get(child, false, false, true);
+		dev_info(dev, "## of_reset_control_array_get(%s) = 0x%x\n", compat, PTR_ERR(rstc));
 		if (IS_ERR(rstc))
 			continue;
 
@@ -330,7 +332,7 @@ static int sec_dsim_of_parse_resets(struct imx_sec_dsim_device *dsim)
 	}
 
 	if (!rstc_num) {
-		dev_err(dev, "no invalid reset control exists\n");
+		dev_err(dev, "no valid reset control exists\n");
 		return -EINVAL;
 	}
 
@@ -456,7 +458,11 @@ static int imx_sec_dsim_probe(struct platform_device *pdev)
 
 	pm_runtime_enable(dev);
 
-	return component_add(dev, &imx_sec_dsim_ops);
+	ret = component_add(dev, &imx_sec_dsim_ops);
+	if (ret)
+		sec_dsim_of_put_resets(dsim_dev);
+
+	return ret;
 }
 
 static int imx_sec_dsim_remove(struct platform_device *pdev)
