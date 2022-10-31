@@ -198,6 +198,8 @@ int drm_bridge_attach(struct drm_encoder *encoder, struct drm_bridge *bridge,
 
 	if (bridge->funcs->attach) {
 		ret = bridge->funcs->attach(bridge, flags);
+		DRM_INFO("bridge->funcs->attach(%pOF, %x): %d\n",
+			 bridge->of_node, flags, ret);
 		if (ret < 0)
 			goto err_reset_bridge;
 	}
@@ -206,6 +208,8 @@ int drm_bridge_attach(struct drm_encoder *encoder, struct drm_bridge *bridge,
 		struct drm_bridge_state *state;
 
 		state = bridge->funcs->atomic_reset(bridge);
+		DRM_INFO("bridge->funcs->atomic_reset(%pOF): %d\n",
+			 bridge->of_node, PTR_ERR(state));
 		if (IS_ERR(state)) {
 			ret = PTR_ERR(state);
 			goto err_detach_bridge;
