@@ -308,10 +308,12 @@ static int sec_dsim_of_parse_resets(struct imx_sec_dsim_device *dsim)
 	parent = args.np;
 	for_each_child_of_node(parent, child) {
 		compat = of_get_property(child, "compatible", NULL);
+		dev_info(dev, "## Node=%s\n", compat);
 		if (!compat)
 			continue;
 
 		rstc = of_reset_control_array_get(child, false, false, true);
+		dev_info(dev, "## of_reset_control_array_get(%s) = 0x%x\n", compat, PTR_ERR(rstc));
 		if (IS_ERR(rstc))
 			continue;
 

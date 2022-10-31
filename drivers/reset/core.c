@@ -759,10 +759,13 @@ __reset_control_get_internal(struct reset_controller_dev *rcdev,
 			 * that is initially not acquired for an already
 			 * controlled reset line.
 			 */
+			dev_info(rcdev->dev, "rstc(%s, %d): rstc->shared=%d shared=%d acquired=%d \n",
+				 rcdev_name(rcdev), rstc->id, rstc->shared, shared, acquired);
 			if (!rstc->shared && !shared && !acquired)
 				break;
 
-			if (WARN_ON(!rstc->shared || !shared))
+//			if (WARN_ON(!rstc->shared || !shared))
+			if (!rstc->shared || !shared)
 				return ERR_PTR(-EBUSY);
 
 			kref_get(&rstc->refcnt);
