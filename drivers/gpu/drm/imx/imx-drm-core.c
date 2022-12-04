@@ -179,20 +179,46 @@ static const struct drm_driver imx_drm_driver = {
 static int compare_of(struct device *dev, void *data)
 {
 	struct device_node *np = data;
+	struct device_node *pr = of_get_parent(np);
+
+	dev_info(dev, "%s(): np=%s pr=%s\n", __func__,
+		 (np->full_name) ? np->full_name : ((np->name) ? np->name : "NONE"),
+		 (pr->full_name) ? pr->full_name : ((pr->name) ? pr->name : "NONE")
+		 );
 
 	/* Special case for DI, dev->of_node may not be set yet */
 	if (strcmp(dev->driver->name, "imx-ipuv3-crtc") == 0) {
 		struct ipu_client_platformdata *pdata = dev->platform_data;
 
+		dev_info(dev, "%s(): imx-ipuv3-crtc 0x%lx (%s) == 0x%lx (%s) = %d\n",
+			 __func__,
+			 (unsigned long) pdata->of_node,
+			(pdata->of_node->full_name) ? pdata->of_node->full_name : ((pdata->of_node->name) ? pdata->of_node->name : "NONE"),
+			 (unsigned long) np,
+			(np->full_name) ? np->full_name : ((np->name) ? np->name : "NONE"),
+			pdata->of_node == np
+			 );
 		return pdata->of_node == np;
+	}
+
+	if (strcmp(dev->driver->name, "dwhdmi-imx") == 0) {
+		dev_info(dev, "%s(): dwhdmi-imx detected\n", __func__);
 	}
 
 	/* Special case for LDB, one device for two channels */
 	if (of_node_name_eq(np, "lvds-channel")) {
-		np = of_get_parent(np);
-		of_node_put(np);
+		struct device_node *tmp = np;
+		np = of_get_parent(tmp);
+		of_node_put(tmp);
 	}
 
+	dev_info(dev, "%s(): 0x%lx (%s) == 0x%lx (%s) = %d\n",
+		 __func__, (unsigned long) dev->of_node,
+		 (dev->of_node->full_name) ? dev->of_node->full_name : ((dev->of_node->name) ? dev->of_node->name : "NONE"),
+		 (unsigned long) np,
+		 (np->full_name) ? np->full_name : ((np->name) ? np->name : "NONE"),
+		 dev->of_node == np
+		 );
 	return dev->of_node == np;
 }
 
@@ -202,6 +228,7 @@ static int imx_drm_bind(struct device *dev)
 	int ret;
 
 	drm = drm_dev_alloc(&imx_drm_driver, dev);
+	dev_info(dev, "%s(): drm_dev_alloc() = 0x%lx %d\n", __func__, drm, PTR_ERR(drm));
 	if (IS_ERR(drm))
 		return PTR_ERR(drm);
 
@@ -219,10 +246,12 @@ static int imx_drm_bind(struct device *dev)
 	drm->mode_config.normalize_zpos = true;
 
 	ret = drmm_mode_config_init(drm);
+	dev_info(dev, "%s(): drmm_mode_config_init() = %d\n", __func__, ret);
 	if (ret)
 		goto err_kms;
 
 	ret = drm_vblank_init(drm, MAX_CRTC);
+	dev_info(dev, "%s(): drm_vblank_init() = %d\n", __func__, ret);
 	if (ret)
 		goto err_kms;
 
@@ -230,6 +259,7 @@ static int imx_drm_bind(struct device *dev)
 
 	/* Now try and bind all our sub-components */
 	ret = component_bind_all(dev, drm);
+	dev_info(dev, "%s(): component_bind_all() = %d\n", __func__, ret);
 	if (ret)
 		goto err_kms;
 
@@ -248,11 +278,13 @@ static int imx_drm_bind(struct device *dev)
 	drm_kms_helper_poll_init(drm);
 
 	ret = drm_dev_register(drm, 0);
+	dev_info(dev, "%s(): drm_dev_register() = %d\n", __func__, ret);
 	if (ret)
 		goto err_poll_fini;
 
 	drm_fbdev_generic_setup(drm, legacyfb_depth);
 
+	dev_info(dev, "%s(): return OK\n", __func__);
 	return 0;
 
 err_poll_fini:
@@ -268,6 +300,7 @@ static void imx_drm_unbind(struct device *dev)
 {
 	struct drm_device *drm = dev_get_drvdata(dev);
 
+	dev_info(dev, "%s(): enter\n", __func__);
 	drm_dev_unregister(drm);
 
 	drm_kms_helper_poll_fini(drm);
@@ -286,16 +319,21 @@ static const struct component_master_ops imx_drm_ops = {
 
 static int imx_drm_platform_probe(struct platform_device *pdev)
 {
-	int ret = drm_of_component_probe(&pdev->dev, compare_of, &imx_drm_ops);
+	int ret;
+
+	ret = drm_of_component_probe(&pdev->dev, compare_of, &imx_drm_ops);
+	dev_info(&pdev->dev, "%s(): drm_of_component_probe() ret = %d\n", __func__, ret);
 
 	if (!ret)
 		ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
 
+	dev_info(&pdev->dev, "%s(): return %d\n", __func__, ret);
 	return ret;
 }
 
 static int imx_drm_platform_remove(struct platform_device *pdev)
 {
+	dev_info(&pdev->dev, "%s(): ENTER\n", __func__);
 	component_master_del(&pdev->dev, &imx_drm_ops);
 	return 0;
 }
@@ -341,12 +379,14 @@ static struct platform_driver * const drivers[] = {
 
 static int __init imx_drm_init(void)
 {
+	printk(KERN_INFO "%s: ENTER\n", __func__);
 	return platform_register_drivers(drivers, ARRAY_SIZE(drivers));
 }
 module_init(imx_drm_init);
 
 static void __exit imx_drm_exit(void)
 {
+	printk(KERN_INFO "%s: ENTER\n", __func__);
 	platform_unregister_drivers(drivers, ARRAY_SIZE(drivers));
 }
 module_exit(imx_drm_exit);

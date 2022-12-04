@@ -198,6 +198,8 @@ static int dw_hdmi_imx_bind(struct device *dev, struct device *master,
 
 	hdmi_encoder = drmm_simple_encoder_alloc(drm, struct imx_hdmi_encoder,
 						 encoder, DRM_MODE_ENCODER_TMDS);
+	dev_dbg(dev, "%s(): drmm_simple_encoder_alloc() = 0x%lx\n",
+		__func__, (unsigned long) hdmi_encoder);
 	if (IS_ERR(hdmi_encoder))
 		return PTR_ERR(hdmi_encoder);
 
@@ -205,12 +207,15 @@ static int dw_hdmi_imx_bind(struct device *dev, struct device *master,
 	encoder = &hdmi_encoder->encoder;
 
 	ret = imx_drm_encoder_parse_of(drm, encoder, dev->of_node);
+	dev_dbg(dev, "%s(): imx_drm_encoder_parse_of() = %d\n", __func__, ret);
 	if (ret)
 		return ret;
 
 	drm_encoder_helper_add(encoder, &dw_hdmi_imx_encoder_helper_funcs);
 
-	return drm_bridge_attach(encoder, hdmi_encoder->hdmi->bridge, NULL, 0);
+	ret = drm_bridge_attach(encoder, hdmi_encoder->hdmi->bridge, NULL, 0);
+	dev_dbg(dev, "%s(): drm_bridge_attach() = %d\n", __func__, ret);
+	return ret;
 }
 
 static const struct component_ops dw_hdmi_imx_ops = {
@@ -224,6 +229,7 @@ static int dw_hdmi_imx_probe(struct platform_device *pdev)
 	struct imx_hdmi *hdmi;
 	int ret;
 
+	dev_info(&pdev->dev, "%s: ENTER\n", __func__);
 	hdmi = devm_kzalloc(&pdev->dev, sizeof(*hdmi), GFP_KERNEL);
 	if (!hdmi)
 		return -ENOMEM;
@@ -238,8 +244,10 @@ static int dw_hdmi_imx_probe(struct platform_device *pdev)
 	}
 
 	hdmi->hdmi = dw_hdmi_probe(pdev, match->data);
-	if (IS_ERR(hdmi->hdmi))
+	if (IS_ERR(hdmi->hdmi)) {
+		dev_err(hdmi->dev, "%s: dw_hdmi_probe() = %ld\n", __func__, PTR_ERR(hdmi->hdmi));
 		return PTR_ERR(hdmi->hdmi);
+	}
 
 	hdmi->bridge = of_drm_find_bridge(np);
 	if (!hdmi->bridge) {
@@ -252,6 +260,7 @@ static int dw_hdmi_imx_probe(struct platform_device *pdev)
 	if (ret)
 		dw_hdmi_remove(hdmi->hdmi);
 
+	dev_info(hdmi->dev, "component_add() = %d\n", ret);
 	return ret;
 }
 

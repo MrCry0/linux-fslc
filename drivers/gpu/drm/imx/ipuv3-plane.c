@@ -5,6 +5,8 @@
  * Copyright (C) 2013 Philipp Zabel, Pengutronix
  */
 
+#define DEBUG
+
 #include <drm/drm_atomic.h>
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_fb_cma_helper.h>

@@ -7,6 +7,8 @@
  * subsystem, and only handles one master device, but this doesn't have to be
  * the case.
  */
+
+#define DEBUG
 #include <linux/component.h>
 #include <linux/device.h>
 #include <linux/kref.h>
@@ -631,17 +633,24 @@ int component_bind_all(struct device *parent, void *data)
 	WARN_ON(!mutex_is_locked(&component_mutex));
 
 	master = __master_find(parent, NULL);
+	dev_info(parent, "%s: __master_find() = 0x%lx\n", __func__,
+		 (unsigned long) master);
 	if (!master)
 		return -EINVAL;
 
+	dev_info(master->parent, "%s: Iterating components 0..%d\n", __func__,
+		 master->match->num);
 	/* Bind components in match order */
-	for (i = 0; i < master->match->num; i++)
+	for (i = 0; i < master->match->num; i++) {
+		c = master->match->compare[i].component;
+		dev_info(master->parent, "%s: bounding %s (ops %ps): checking for dup...\n",
+			 __func__, dev_name(c->dev), c->ops);
 		if (!master->match->compare[i].duplicate) {
-			c = master->match->compare[i].component;
 			ret = component_bind(c, master, data);
 			if (ret)
 				break;
 		}
+	}
 
 	if (ret != 0) {
 		for (; i > 0; i--)

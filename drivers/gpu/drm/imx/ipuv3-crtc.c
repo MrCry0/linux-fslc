@@ -5,6 +5,8 @@
  * Copyright (C) 2011 Sascha Hauer, Pengutronix
  */
 
+#define DEBUG
+
 #include <linux/clk.h>
 #include <linux/component.h>
 #include <linux/device.h>
@@ -373,6 +375,7 @@ static int ipu_drm_bind(struct device *dev, struct device *master, void *data)
 	int dp = -EINVAL;
 	int ret;
 
+	dev_info(dev, "%s(0x%x [%s]): enter\n", __func__, (unsigned long) master, dev_name(master));
 	if (pdata->dp >= 0)
 		dp = IPU_DP_FLOW_SYNC_BG;
 	primary_plane = ipu_plane_init(drm, ipu, pdata->dma[0], dp, 0,
@@ -419,6 +422,7 @@ static int ipu_drm_bind(struct device *dev, struct device *master, void *data)
 	}
 	/* Only enable IRQ when we actually need it to trigger work. */
 	disable_irq(ipu_crtc->irq);
+	dev_info(dev, "%s(0x%x [%s]): probed OK\n", __func__, (unsigned long) master, dev_name(master));
 
 	return 0;
 }
@@ -432,14 +436,20 @@ static int ipu_drm_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	int ret;
 
-	if (!dev->platform_data)
+	if (!dev->platform_data) {
+		dev_info(dev, "%s(): !dev->platform_data\n", __func__);
 		return -EINVAL;
+	}
 
 	ret = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
-	if (ret)
+	if (ret) {
+		dev_info(dev, "%s(): dma_set_coherent_mask() = %d\n", __func__, ret);
 		return ret;
+	}
 
-	return component_add(dev, &ipu_crtc_ops);
+	ret = component_add(dev, &ipu_crtc_ops);
+	dev_info(dev, "%s(): component_add() = %d\n", __func__, ret);
+	return ret;
 }
 
 static int ipu_drm_remove(struct platform_device *pdev)

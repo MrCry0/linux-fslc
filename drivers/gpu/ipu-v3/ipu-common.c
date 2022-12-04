@@ -3,6 +3,9 @@
  * Copyright (c) 2010 Sascha Hauer <s.hauer@pengutronix.de>
  * Copyright (C) 2005-2009 Freescale Semiconductor, Inc.
  */
+
+#define DEBUG
+
 #include <linux/module.h>
 #include <linux/export.h>
 #include <linux/types.h>
@@ -888,6 +891,7 @@ static int ipu_submodules_init(struct ipu_soc *ipu,
 	struct device *dev = &pdev->dev;
 	const struct ipu_devtype *devtype = ipu->devtype;
 
+	dev_info(ipu->dev, "%s(): Enter\n", __func__);
 	ret = ipu_cpmem_init(ipu, dev, ipu_base + devtype->cpmem_ofs);
 	if (ret) {
 		unit = "cpmem";
@@ -1046,6 +1050,7 @@ int ipu_map_irq(struct ipu_soc *ipu, int irq)
 {
 	int virq;
 
+	dev_info(ipu->dev, "%s(): Enter\n", __func__);
 	virq = irq_linear_revmap(ipu->domain, irq);
 	if (!virq)
 		virq = irq_create_mapping(ipu->domain, irq);
@@ -1063,6 +1068,7 @@ EXPORT_SYMBOL_GPL(ipu_idmac_channel_irq);
 
 static void ipu_submodules_exit(struct ipu_soc *ipu)
 {
+	dev_info(ipu->dev, "%s(): Enter\n", __func__);
 	ipu_smfc_exit(ipu);
 	ipu_dp_exit(ipu);
 	ipu_dmfc_exit(ipu);
@@ -1142,6 +1148,7 @@ static int ipu_add_client_devices(struct ipu_soc *ipu, unsigned long ipu_base)
 	unsigned i;
 	int id, ret;
 
+	dev_info(ipu->dev, "%s(): Enter\n", __func__);
 	mutex_lock(&ipu_client_id_mutex);
 	id = ipu_client_id;
 	ipu_client_id += ARRAY_SIZE(client_reg);
@@ -1176,6 +1183,10 @@ static int ipu_add_client_devices(struct ipu_soc *ipu, unsigned long ipu_base)
 		if (!ret)
 			ret = platform_device_add(pdev);
 		if (ret) {
+			dev_info(dev,
+				 "%s(): platform_device_add_data(port@%d, %pOF, %s%d) = %d\n",
+				 __func__, i, dev->of_node,
+				 (i / 2) ? "DI" : "CSI", i % 2, ret);
 			platform_device_put(pdev);
 			goto err_register;
 		}
@@ -1206,6 +1217,7 @@ static int ipu_irq_init(struct ipu_soc *ipu)
 	};
 	int ret, i;
 
+	dev_info(ipu->dev, "%s(): Enter\n", __func__);
 	ipu->domain = irq_domain_add_linear(ipu->dev->of_node, IPU_NUM_IRQS,
 					    &irq_generic_chip_ops, ipu);
 	if (!ipu->domain) {

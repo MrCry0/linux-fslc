@@ -181,6 +181,7 @@ int drm_of_component_probe(struct device *dev,
 		of_node_put(port);
 	}
 
+	dev_info(dev, "%s(): match=0x%lx\n", __func__, (unsigned long) match);
 	return component_master_add_with_match(dev, m_ops, match);
 }
 EXPORT_SYMBOL(drm_of_component_probe);

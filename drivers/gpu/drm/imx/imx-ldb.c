@@ -5,6 +5,8 @@
  * Copyright (C) 2012 Sascha Hauer, Pengutronix
  */
 
+#define DEBUG
+
 #include <linux/clk.h>
 #include <linux/component.h>
 #include <linux/mfd/syscon.h>
