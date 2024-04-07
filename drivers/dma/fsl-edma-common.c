@@ -427,21 +427,6 @@ void fsl_edma_fill_tcd(struct fsl_edma_hw_tcd *tcd, u32 src, u32 dst,
 
 	tcd->soff = cpu_to_le16(soff);
 
-	if (fsl_chan->is_multi_fifo) {
-		/* set mloff to support multiple fifo */
-		burst = cfg->direction == DMA_DEV_TO_MEM ?
-				cfg->src_addr_width : cfg->dst_addr_width;
-		nbytes |= EDMA_V3_TCD_NBYTES_MLOFF(-(burst * 4));
-		/* enable DMLOE/SMLOE */
-		if (cfg->direction == DMA_MEM_TO_DEV) {
-			nbytes |= EDMA_V3_TCD_NBYTES_DMLOE;
-			nbytes &= ~EDMA_V3_TCD_NBYTES_SMLOE;
-		} else {
-			nbytes |= EDMA_V3_TCD_NBYTES_SMLOE;
-			nbytes &= ~EDMA_V3_TCD_NBYTES_DMLOE;
-		}
-	}
-
 	tcd->nbytes = cpu_to_le32(nbytes);
 	tcd->slast = cpu_to_le32(slast);
 
